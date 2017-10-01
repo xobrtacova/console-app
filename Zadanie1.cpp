@@ -2,97 +2,63 @@
 //
 
 #include "stdafx.h"
-#include <iostream>
+#include <iostream> //cin, cout
 #include <fstream>
 #include <cstdlib>
 #include <cmath>
 #include <string>
+#include <iterator> // istream_iterator
 
 using namespace std;
 
-int main()
+template <typename T>
+size_t counter(istream &str) //pocitadlo
 {
-	string nazov_suboru, riadky, *text = new string[20];
-	int pocet_riadkov = 0, pocet_slov = 0, pocet_znakov = 0;
-	char prepinac, posledny;
+	return distance(istream_iterator<T>(str), istream_iterator<T>());
+}
 
-	cout << "Zadaj nazov suboru (bez .txt): ";
-	getline(cin,nazov_suboru);
 
-	nazov_suboru = nazov_suboru + ".txt";
-	fstream subor(nazov_suboru.c_str(), fstream::in);
-	if (!subor.is_open())
+class line : public string {};
+
+istream &operator>>(istream &str, line &line)
+{
+	getline(str, line);
+	return str;
+}
+
+int main(int argc, char * argv[]) // argumenty prikazoveho riadku
+{
+	istream *pVstup = nullptr;
+	ifstream subor;
+
+	if (argc < 2 || argc > 3) return -1;
+
+	else if (argc == 3)
 	{
-		cout << "Nepodarilo sa otvorit subor!" << endl;
-		cout << "\nZadaj text: **Posledny riadok skonci bodkou.**\n";
-
-		do
-		{
-			getline(cin,text[pocet_riadkov]);
-			if (text[pocet_riadkov].size() != 0)
-			{
-				posledny = text[pocet_riadkov][text[pocet_riadkov].size() - 1];
-				pocet_riadkov++;
-			}
-		} while (posledny != '.');
+		subor.open(argv[2], fstream::in);
+		if (!subor.is_open()) return -1;
+		pVstup = &subor;
 	}
 
-	cout << "\nPrepinace:\n-c - spocitanie znakov\n-w - spocitanie slov\n-l - spocitanie riadkov\nZadaj prepinac c/w/l: ";
-	cin >> prepinac;
-
-	if (prepinac == 'c')		
+	else
 	{
-		if (subor.is_open())
-		{
-			while (!subor.eof())
-			{
-				getline(subor, riadky);
-				for (int i = 0; i < riadky.size(); i++)
-				{
-					if (riadky[i] != ' ')
-						pocet_znakov++;
-				}
-			}
-			cout << "\nPocet znakov v " << nazov_suboru << " je: " << pocet_znakov << endl << endl;
-		}
-
-		else
-		{
-			for (int i=0; i<text->size(); i++)
-			{
-				for (int j = 0; j < text[i].size(); j++)
-				{
-					if (text[i][j] != ' ')
-						pocet_znakov++;
-				}
-			}
-			cout << "\nPocet znakov je " << pocet_znakov << endl << endl;
-		}
+		cout << "Zadaj text:" << endl;
+		pVstup = &cin;
 	}
+	
+	if (argv[1] == string("-c"))
+		cout << "Pocet znakov je: " << counter<char>(*pVstup) << endl;
 
-	if (prepinac == 'w')
-	{
-		
-	}
+	else if (argv[1] == string("-w"))
+		cout << "Pocet slov je: " << counter<string>(*pVstup) << endl;
 
-	if (prepinac == 'l')
-	{
-		if (subor.is_open())
-		{
-			while (!subor.eof())
-			{
-				getline(subor, riadky);
-				if (riadky.size() != 0)
-					pocet_riadkov++;
-			}
-			cout << "\nPocet riadkov v " << nazov_suboru << " je: " << pocet_riadkov << endl << endl;
-		}
-		
-		else
-			cout << "\nPocet riadkov je " << pocet_riadkov << endl << endl;
-	}
+	else if (argv[1] == string("-l"))
+		cout << "Pocet riadkov je: " << counter<line>(*pVstup) << endl;
+	
+	else return -1;
 
-	subor.close();
-	delete[] text;
+	if (pVstup != &cin)
+		subor.close();
+
 	return 0;
 }
